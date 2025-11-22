@@ -50,6 +50,7 @@ const getProducts = async (req, res) => {
 
         res.json(productsWithStock);
     } catch (error) {
+        console.error('Error in getProducts:', error);
         res.status(500).json({ message: 'Error fetching products' });
     }
 };

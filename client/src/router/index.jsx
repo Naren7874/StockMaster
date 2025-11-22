@@ -19,6 +19,7 @@ import Warehouses from '../pages/resources/Warehouses';
 import Locations from '../pages/resources/Locations';
 import Users from '../pages/resources/Users';
 import ProductForm from '../pages/products/ProductForm';
+import ProductDetail from '../pages/products/ProductDetail';
 import Profile from '../pages/profile/Profile';
 import NotFound from '../pages/NotFound';
 

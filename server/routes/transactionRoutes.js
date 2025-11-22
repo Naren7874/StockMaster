@@ -8,7 +8,9 @@ const {
     createTransfer,
     createAdjust,
     updateStatus,
-    getHistory
+    getHistory,
+    createReorder,
+    updateTransaction
 } = require('../controllers/transactionController');
 const { authenticateToken } = require('../middleware/auth');
 
@@ -22,6 +24,9 @@ router.post('/out', authenticateToken, createOut);
 router.post('/transfer', authenticateToken, createTransfer);
 router.post('/adjust', authenticateToken, createAdjust);
 router.post('/:id/validate', authenticateToken, validateTransaction);
+router.post('/:id/complete', authenticateToken, validateTransaction);
 router.post('/:id/status', authenticateToken, updateStatus);
+router.post('/reorder/:productId/:warehouseId', authenticateToken, createReorder);
+router.put('/:id', authenticateToken, updateTransaction);
 
 module.exports = router;

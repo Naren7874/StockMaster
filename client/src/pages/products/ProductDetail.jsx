@@ -11,6 +11,10 @@ const ProductDetail = () => {
     const [stock, setStock] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const [reorderModalOpen, setReorderModalOpen] = useState(false);
+    const [reorderData, setReorderData] = useState({ transaction: null, suggestedQty: 0 });
+    const [editQty, setEditQty] = useState(0);
+
     useEffect(() => {
         const loadData = async () => {
             try {
@@ -28,6 +32,40 @@ const ProductDetail = () => {
         };
         loadData();
     }, [id]);
+
+    const handleReorder = async (warehouseId) => {
+        try {
+            const data = await api.createReorder(id, warehouseId);
+            setReorderData(data);
+            setEditQty(data.suggestedQty);
+            setReorderModalOpen(true);
+        } catch (error) {
+            alert('Failed to initiate reorder');
+        }
+    };
+
+    const confirmReorder = async () => {
+        try {
+            if (editQty !== reorderData.suggestedQty) {
+                // Update transaction if quantity changed
+                await api.updateTransaction(reorderData.transaction.id, {
+                    items: [{ productId: id, quantity: parseInt(editQty) }]
+                });
+            }
+            await api.completeTransaction(reorderData.transaction.id);
+            setReorderModalOpen(false);
+            // Refresh data
+            const [productData, stockData] = await Promise.all([
+                api.getProduct(id),
+                api.getProductStock(id)
+            ]);
+            setProduct(productData);
+            setStock(stockData);
+            alert('Reorder completed successfully');
+        } catch (error) {
+            alert('Failed to complete reorder');
+        }
+    };
 
     if (loading) return <div>Loading...</div>;
     if (!product) return <div>Product not found</div>;
@@ -119,6 +157,7 @@ const ProductDetail = () => {
                             <th className="text-left p-4">Location</th>
                             <th className="text-right p-4">Quantity</th>
                             <th className="text-center p-4">Status</th>
+                            <th className="text-right p-4">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -134,11 +173,18 @@ const ProductDetail = () => {
                                         {item.quantity > 0 ? 'Available' : 'Empty'}
                                     </span>
                                 </td>
+                                <td className="p-4 text-right">
+                                    {item.quantity < product.minStock && (
+                                        <Button size="sm" variant="outline" onClick={() => handleReorder(item.warehouseId)}>
+                                            Reorder
+                                        </Button>
+                                    )}
+                                </td>
                             </tr>
                         ))}
                         {stock.length === 0 && (
                             <tr>
-                                <td colSpan="4" className="p-8 text-center text-gray-500">
+                                <td colSpan="5" className="p-8 text-center text-gray-500">
                                     No stock recorded for this product.
                                 </td>
                             </tr>
@@ -146,6 +192,32 @@ const ProductDetail = () => {
                     </tbody>
                 </table>
             </div>
+
+            {/* Reorder Modal */}
+            {reorderModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full">
+                        <h3 className="text-lg font-bold mb-4">Confirm Reorder</h3>
+                        <p className="mb-4 text-gray-600">
+                            Suggested quantity based on minimum stock level ({product.minStock}).
+                        </p>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                            <input
+                                type="number"
+                                className="input w-full"
+                                value={editQty}
+                                onChange={(e) => setEditQty(e.target.value)}
+                                min="1"
+                            />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <Button variant="ghost" onClick={() => setReorderModalOpen(false)}>Cancel</Button>
+                            <Button onClick={confirmReorder}>Confirm & Order</Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

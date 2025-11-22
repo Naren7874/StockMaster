@@ -35,6 +35,7 @@ model Product {
   category         String?
   uom              String            @default("UNIT")
   minStock         Int               @default(10)
+  price            Float             @default(0)
   stock            Stock[]
   transactionItems TransactionItem[]
 }

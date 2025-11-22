@@ -63,6 +63,9 @@ export const api = {
     getTransactions: () => fetchWithAuth('/transactions'),
     createTransaction: (data) => fetchWithAuth('/transactions', { method: 'POST', body: JSON.stringify(data) }),
     validateTransaction: (id) => fetchWithAuth(`/transactions/${id}/validate`, { method: 'POST' }),
+    createReorder: (productId, warehouseId) => fetchWithAuth(`/transactions/reorder/${productId}/${warehouseId}`, { method: 'POST' }),
+    updateTransaction: (id, data) => fetchWithAuth(`/transactions/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    completeTransaction: (id) => fetchWithAuth(`/transactions/${id}/complete`, { method: 'POST' }),
 
     getDashboardStats: (params) => {
         const queryString = new URLSearchParams(params).toString();

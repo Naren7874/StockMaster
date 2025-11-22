@@ -301,6 +301,82 @@ const getHistory = async (req, res) => {
     }
 };
 
+const createReorder = async (req, res) => {
+    try {
+        const { productId, warehouseId } = req.params;
+        const userId = req.user.id;
+
+        const product = await prisma.product.findUnique({ where: { id: productId } });
+        if (!product) return res.status(404).json({ message: 'Product not found' });
+
+        const stock = await prisma.stock.findUnique({
+            where: { warehouseId_productId: { warehouseId, productId } }
+        });
+
+        const currentStock = stock ? stock.quantity : 0;
+        const suggestedQty = Math.max((product.minStock * 2) - currentStock, 1);
+
+        const transaction = await prisma.transaction.create({
+            data: {
+                type: 'IN',
+                status: 'DRAFT',
+                reference: `REORDER-AUTO-${Date.now()}`,
+                targetWarehouseId: warehouseId,
+                createdById: userId,
+                items: {
+                    create: [{
+                        productId,
+                        quantity: suggestedQty
+                    }]
+                }
+            },
+            include: { items: true }
+        });
+
+        res.json({ suggestedQty, transaction });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error creating reorder' });
+    }
+};
+
+const updateTransaction = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { items } = req.body;
+
+        // Simple update: delete existing items and recreate
+        // This is easier than diffing for this specific use case
+        const result = await prisma.$transaction(async (tx) => {
+            const transaction = await tx.transaction.findUnique({ where: { id } });
+            if (!transaction || transaction.status !== 'DRAFT') {
+                throw new Error('Transaction not found or not in DRAFT status');
+            }
+
+            if (items) {
+                await tx.transactionItem.deleteMany({ where: { transactionId: id } });
+                await tx.transactionItem.createMany({
+                    data: items.map(item => ({
+                        transactionId: id,
+                        productId: item.productId,
+                        quantity: item.quantity
+                    }))
+                });
+            }
+            
+            return await tx.transaction.findUnique({
+                where: { id },
+                include: { items: true }
+            });
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error updating transaction' });
+    }
+};
+
 module.exports = {
     createTransaction,
     validateTransaction,
@@ -310,5 +386,7 @@ module.exports = {
     createTransfer,
     createAdjust,
     updateStatus,
-    getHistory
+    getHistory,
+    createReorder,
+    updateTransaction
 };
