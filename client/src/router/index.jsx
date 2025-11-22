@@ -54,7 +54,8 @@ export const router = createBrowserRouter([
             { index: true, element: <Dashboard /> },
             { path: 'products', element: <ProductsList /> },
             { path: 'products/new', element: <ProductForm /> },
-            { path: 'products/:id', element: <ProductForm /> }, // View/Edit
+            { path: 'products/:id', element: <ProductDetail /> },
+            { path: 'products/:id/edit', element: <ProductForm /> }, // View/Edit
             { path: 'warehouses', element: <Warehouses /> },
             { path: 'locations', element: <Locations /> },
             { path: 'users', element: <Users /> },
