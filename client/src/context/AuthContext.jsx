@@ -25,15 +25,19 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     }, [token]);
 
-    const login = (newToken, userData) => {
-        localStorage.setItem('token', newToken);
+    const login = (accessToken, refreshToken, userData) => {
+        localStorage.setItem('token', accessToken);
+        if (refreshToken) {
+            localStorage.setItem('refreshToken', refreshToken);
+        }
         localStorage.setItem('user', JSON.stringify(userData));
-        setToken(newToken);
+        setToken(accessToken);
         setUser(userData);
     };
 
     const logout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
         setToken(null);
         setUser(null);

@@ -19,8 +19,8 @@ const Login = () => {
         setError('');
         setLoading(true);
         try {
-            const { accessToken, user } = await api.login({ email, password });
-            login(accessToken, user);
+            const { accessToken, refreshToken, user } = await api.login({ email, password });
+            login(accessToken, refreshToken, user);
             navigate('/');
         } catch (err) {
             setError('Invalid email or password');

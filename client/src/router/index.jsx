@@ -21,6 +21,7 @@ import Users from '../pages/resources/Users';
 import ProductForm from '../pages/products/ProductForm';
 import Profile from '../pages/profile/Profile';
 import NotFound from '../pages/NotFound';
+import ProductDetail from '../pages/products/ProductDetail';
 
 // Auth Guard (Simple wrapper for now)
 import { useAuth } from '../hooks/useAuth';
