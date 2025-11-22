@@ -36,8 +36,6 @@ const Sidebar = ({ isOpen, onClose }) => {
             title: 'Resources',
             items: [
                 { path: '/products', icon: Package, label: 'Products' },
-                { path: '/warehouses', icon: Warehouse, label: 'Warehouses' },
-                { path: '/locations', icon: Map, label: 'Locations' },
                 { path: '/users', icon: Users, label: 'Users' },
             ]
         },
@@ -48,6 +46,13 @@ const Sidebar = ({ isOpen, onClose }) => {
                 { path: '/operations/deliveries', icon: Truck, label: 'Deliveries' },
                 { path: '/operations/adjustments', icon: ClipboardList, label: 'Adjustments' },
                 { path: '/transactions', icon: History, label: 'History' },
+            ]
+        },
+        {
+            title: 'Settings',
+            items: [
+                { path: '/locations', icon: Map, label: 'Locations' },
+                { path: '/warehouses', icon: Warehouse, label: 'Warehouses' },
             ]
         },
     ];

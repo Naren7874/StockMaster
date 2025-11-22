@@ -1,17 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../utils/api';
-import { Map, Plus, Trash2 } from 'lucide-react';
-import Table from '../../components/Table';
+import { Map, Plus, Trash2, Warehouse } from 'lucide-react';
 import Button from '../../components/Button';
 import Modal from '../../components/Modal';
 import Input from '../../components/Input';
 
 const Locations = () => {
     const [locations, setLocations] = useState([]);
-    const [warehouses, setWarehouses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [formData, setFormData] = useState({ name: '', warehouseId: '' });
+    const [formData, setFormData] = useState({ name: '' });
 
     useEffect(() => {
         fetchData();
@@ -19,14 +17,10 @@ const Locations = () => {
 
     const fetchData = async () => {
         try {
-            const [l, w] = await Promise.all([
-                api.getLocations(),
-                api.getWarehouses()
-            ]);
-            setLocations(l);
-            setWarehouses(w);
+            const data = await api.getLocations();
+            setLocations(data);
         } catch (error) {
-            console.error('Failed to fetch data', error);
+            console.error('Failed to fetch locations', error);
         } finally {
             setLoading(false);
         }
@@ -37,7 +31,7 @@ const Locations = () => {
         try {
             await api.createLocation(formData);
             setIsModalOpen(false);
-            setFormData({ name: '', warehouseId: '' });
+            setFormData({ name: '' });
             fetchData();
         } catch (error) {
             alert('Failed to create location');
@@ -54,24 +48,14 @@ const Locations = () => {
         }
     }
 
-    const columns = [
-        { header: 'Name', accessor: 'name', className: 'font-medium' },
-        { header: 'Warehouse', accessor: 'warehouse', render: (row) => row.warehouse?.name },
-        {
-            header: 'Actions', render: (row) => (
-                <button onClick={() => handleDelete(row.id)} className="p-1 hover:bg-red-50 rounded text-red-500">
-                    <Trash2 className="w-4 h-4" />
-                </button>
-            )
-        }
-    ];
+    if (loading) return <div>Loading...</div>;
 
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Locations</h1>
-                    <p className="text-gray-500">Manage specific aisles, racks, and bins</p>
+                    <p className="text-gray-500">Manage geographic locations (Cities, Regions)</p>
                 </div>
                 <Button onClick={() => setIsModalOpen(true)}>
                     <Plus className="w-4 h-4 mr-2" />
@@ -79,7 +63,40 @@ const Locations = () => {
                 </Button>
             </div>
 
-            <Table columns={columns} data={locations} isLoading={loading} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {locations.map(location => (
+                    <div key={location.id} className="bg-white p-6 rounded-xl border shadow-sm">
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                                    <Map className="w-5 h-5" />
+                                </div>
+                                <h3 className="font-bold text-lg text-gray-900">{location.name}</h3>
+                            </div>
+                            <button onClick={() => handleDelete(location.id)} className="text-gray-400 hover:text-red-500">
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-3">
+                            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Warehouses</h4>
+                            {location.warehouses && location.warehouses.length > 0 ? (
+                                <div className="space-y-2">
+                                    {location.warehouses.map(wh => (
+                                        <div key={wh.id} className="flex items-center gap-2 text-sm text-gray-700 bg-gray-50 p-2 rounded-lg">
+                                            <Warehouse className="w-4 h-4 text-gray-400" />
+                                            <span className="font-medium">{wh.name}</span>
+                                            <span className="text-xs text-gray-500 ml-auto font-mono">{wh.shortcode}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-gray-400 italic">No warehouses in this location</p>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
 
             <Modal
                 isOpen={isModalOpen}
@@ -91,23 +108,9 @@ const Locations = () => {
                         label="Location Name"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="e.g., Aisle 1, Rack B"
+                        placeholder="e.g., New York, London"
                         required
                     />
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Warehouse</label>
-                        <select
-                            className="input w-full"
-                            value={formData.warehouseId}
-                            onChange={(e) => setFormData({ ...formData, warehouseId: e.target.value })}
-                            required
-                        >
-                            <option value="">Select Warehouse</option>
-                            {warehouses.map(w => (
-                                <option key={w.id} value={w.id}>{w.name}</option>
-                            ))}
-                        </select>
-                    </div>
                     <div className="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
                             Cancel

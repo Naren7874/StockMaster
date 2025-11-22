@@ -1,3 +1,4 @@
+
 import { createBrowserRouter } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Login from '../pages/auth/Login';
@@ -16,13 +17,14 @@ import AdjustmentForm from '../pages/transactions/AdjustmentForm';
 import Transfers from '../pages/transactions/Transfers';
 import TransferForm from '../pages/transactions/TransferForm';
 import Warehouses from '../pages/resources/Warehouses';
+import WarehouseDetail from '../pages/resources/WarehouseDetail';
 import Locations from '../pages/resources/Locations';
 import Users from '../pages/resources/Users';
 import ProductForm from '../pages/products/ProductForm';
 import ProductDetail from '../pages/products/ProductDetail';
 import Profile from '../pages/profile/Profile';
 import NotFound from '../pages/NotFound';
-import ProductDetail from '../pages/products/ProductDetail';
+//import ProductDetail from '../pages/products/ProductDetail';
 
 // Auth Guard (Simple wrapper for now)
 import { useAuth } from '../hooks/useAuth';
@@ -57,8 +59,9 @@ export const router = createBrowserRouter([
             { path: 'products', element: <ProductsList /> },
             { path: 'products/new', element: <ProductForm /> },
             { path: 'products/:id', element: <ProductDetail /> },
-            { path: 'products/:id/edit', element: <ProductForm /> }, // View/Edit
+            { path: 'products/:id/edit', element: <ProductForm /> },
             { path: 'warehouses', element: <Warehouses /> },
+            { path: 'warehouses/:id', element: <WarehouseDetail /> },
             { path: 'locations', element: <Locations /> },
             { path: 'users', element: <Users /> },
             { path: 'transactions', element: <Transactions /> },
@@ -78,3 +81,4 @@ export const router = createBrowserRouter([
         ]
     }
 ]);
+

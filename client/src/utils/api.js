@@ -86,15 +86,19 @@ export const api = {
     createLocation: (data) => apiClient.post('/locations', data).then(res => res.data),
     deleteLocation: (id) => apiClient.delete(`/locations/${id}`).then(res => res.data),
 
+    getSubLocations: () => apiClient.get('/sublocations').then(res => res.data),
+    createSubLocation: (data) => apiClient.post('/sublocations', data).then(res => res.data),
+    deleteSubLocation: (id) => apiClient.delete(`/sublocations/${id}`).then(res => res.data),
+
     getUsers: () => apiClient.get('/users').then(res => res.data),
     updateUser: (id, data) => apiClient.put(`/users/${id}`, data).then(res => res.data),
 
-    getTransactions: () => fetchWithAuth('/transactions'),
-    createTransaction: (data) => fetchWithAuth('/transactions', { method: 'POST', body: JSON.stringify(data) }),
-    validateTransaction: (id) => fetchWithAuth(`/transactions/${id}/validate`, { method: 'POST' }),
-    createReorder: (productId, warehouseId) => fetchWithAuth(`/transactions/reorder/${productId}/${warehouseId}`, { method: 'POST' }),
-    updateTransaction: (id, data) => fetchWithAuth(`/transactions/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    completeTransaction: (id) => fetchWithAuth(`/transactions/${id}/complete`, { method: 'POST' }),
+    getTransactions: () => apiClient.get('/transactions').then(res => res.data),
+    createTransaction: (data) => apiClient.post('/transactions', data).then(res => res.data),
+    validateTransaction: (id) => apiClient.post(`/transactions/${id}/validate`).then(res => res.data),
+    createReorder: (productId, warehouseId) => apiClient.post(`/transactions/reorder/${productId}/${warehouseId}`).then(res => res.data),
+    updateTransaction: (id, data) => apiClient.put(`/transactions/${id}`, data).then(res => res.data),
+    completeTransaction: (id) => apiClient.post(`/transactions/${id}/complete`).then(res => res.data),
 
     getDashboardStats: (params) => {
         const queryString = new URLSearchParams(params).toString();

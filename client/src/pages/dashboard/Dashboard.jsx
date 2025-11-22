@@ -107,7 +107,7 @@ const Dashboard = () => {
 
     const SparklineCard = ({ title, value, trend, color }) => {
         const data = generateSparklineData();
-        
+
         return (
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between h-full hover:shadow-md transition-shadow duration-200">
                 <div>
@@ -126,7 +126,7 @@ const Dashboard = () => {
                     </div>
                     <p className="text-sm text-slate-500 mb-4">vs last month</p>
                 </div>
-                
+
                 <div className="h-16 -mx-2">
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={data}>
@@ -136,12 +136,12 @@ const Dashboard = () => {
                                     <stop offset="100%" stopColor={color} stopOpacity={0} />
                                 </linearGradient>
                             </defs>
-                            <Area 
-                                type="monotone" 
-                                dataKey="value" 
-                                stroke={color} 
-                                strokeWidth={2} 
-                                fill={`url(#gradient-${title})`} 
+                            <Area
+                                type="monotone"
+                                dataKey="value"
+                                stroke={color}
+                                strokeWidth={2}
+                                fill={`url(#gradient-${title})`}
                                 isAnimationActive={false}
                             />
                         </AreaChart>
@@ -167,8 +167,8 @@ const Dashboard = () => {
                         <div className="flex items-center">
                             <Building2 className="w-4 h-4 text-slate-500 mr-2" />
                             <span className="text-sm font-medium text-slate-700">
-                                {filters.warehouseId === 'ALL' 
-                                    ? 'All Warehouses' 
+                                {filters.warehouseId === 'ALL'
+                                    ? 'All Warehouses'
                                     : warehouses.find(w => w.id === filters.warehouseId)?.name || 'Select Warehouse'}
                             </span>
                         </div>
@@ -183,7 +183,7 @@ const Dashboard = () => {
                                 </div>
                             </div>
                             <div className="h-px bg-slate-100 my-1" />
-                            
+
                             <button
                                 onClick={() => {
                                     setFilters({ ...filters, warehouseId: 'ALL' });
@@ -278,9 +278,9 @@ const Dashboard = () => {
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dy={10} />
                                     <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
                                     <Tooltip
-                                        contentStyle={{ 
-                                            borderRadius: '8px', 
-                                            border: '1px solid #e2e8f0', 
+                                        contentStyle={{
+                                            borderRadius: '8px',
+                                            border: '1px solid #e2e8f0',
                                             boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                                             padding: '8px 12px'
                                         }}
@@ -317,11 +317,10 @@ const Dashboard = () => {
                                                 {activity.items[0]?.product.name}
                                             </td>
                                             <td className="py-4 px-6">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                    activity.type === 'IN' ? 'bg-emerald-50 text-emerald-700' :
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${activity.type === 'IN' ? 'bg-emerald-50 text-emerald-700' :
                                                     activity.type === 'OUT' ? 'bg-blue-50 text-blue-700' :
-                                                    'bg-slate-100 text-slate-700'
-                                                }`}>
+                                                        'bg-slate-100 text-slate-700'
+                                                    }`}>
                                                     {activity.type}
                                                 </span>
                                             </td>
