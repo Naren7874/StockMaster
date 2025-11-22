@@ -23,16 +23,22 @@ const getDashboardStats = async (req, res) => {
         // 1. KPIs
         const totalProducts = await prisma.product.count({ where: productFilter });
 
-        const lowStockCount = await prisma.product.count({
-            where: {
-                ...productFilter,
-                stock: {
-                    some: {
-                        quantity: { lte: prisma.product.fields.minStock }
-                    }
-                }
-            }
+        // Fix low stock count query - using relation correctly
+        // We need to find products where the SUM of stock quantity is less than minStock
+        // Prisma doesn't support aggregation in where clause directly easily.
+        // For now, let's fetch all products and filter in memory (not efficient but works for MVP)
+        // OR check if ANY stock entry is low (which is what the previous query did but might be wrong logic)
+
+        // Better approach for MVP:
+        const allProducts = await prisma.product.findMany({
+            where: productFilter,
+            include: { stock: true }
         });
+
+        const lowStockCount = allProducts.filter(p => {
+            const totalStock = p.stock.reduce((acc, s) => acc + s.quantity, 0);
+            return totalStock <= p.minStock;
+        }).length;
 
         const pendingReceipts = await prisma.transaction.count({
             where: { ...transactionFilter, type: 'IN', status: 'DRAFT' }
