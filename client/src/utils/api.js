@@ -1,71 +1,106 @@
+import axios from 'axios';
+
 const API_URL = import.meta.VITE_APP_URL || 'http://localhost:3001/api';
 
-async function fetchWithAuth(endpoint, options = {}) {
-    const token = localStorage.getItem('token');
-    const headers = {
+const apiClient = axios.create({
+    baseURL: API_URL,
+    headers: {
         'Content-Type': 'application/json',
-        ...options.headers,
-    };
+    },
+});
 
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+apiClient.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+apiClient.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+
+            try {
+                const refreshToken = localStorage.getItem('refreshToken');
+                if (!refreshToken) {
+                    throw new Error('No refresh token');
+                }
+
+                const response = await axios.post(`${API_URL}/auth/refresh`, {
+                    refreshToken,
+                });
+
+                const { accessToken, refreshToken: newRefreshToken } = response.data;
+
+                localStorage.setItem('token', accessToken);
+                if (newRefreshToken) {
+                    localStorage.setItem('refreshToken', newRefreshToken);
+                }
+
+                apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+                originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
+
+                return apiClient(originalRequest);
+            } catch (refreshError) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+                return Promise.reject(refreshError);
+            }
+        }
+        return Promise.reject(error.response?.data || error);
     }
-
-    const response = await fetch(`${API_URL}${endpoint}`, {
-        ...options,
-        headers,
-    });
-
-    if (response.status === 401) {
-        // Handle unauthorized (logout)
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-        throw new Error('Unauthorized');
-    }
-
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'An error occurred' }));
-        throw new Error(error.message || 'An error occurred');
-    }
-
-    return response.json();
-}
+);
 
 export const api = {
-    login: (credentials) => fetchWithAuth('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
-    signup: (data) => fetchWithAuth('/auth/signup', { method: 'POST', body: JSON.stringify(data) }),
-    resetOtp: (email) => fetchWithAuth('/auth/reset-otp', { method: 'POST', body: JSON.stringify({ email }) }),
-    resetPassword: (data) => fetchWithAuth('/auth/reset', { method: 'POST', body: JSON.stringify(data) }),
-    getMe: () => fetchWithAuth('/auth/me'),
-    register: (data) => fetchWithAuth('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+    login: (credentials) => apiClient.post('/auth/login', credentials).then(res => res.data),
+    signup: (data) => apiClient.post('/auth/signup', data).then(res => res.data),
+    resetOtp: (email) => apiClient.post('/auth/reset-otp', { email }).then(res => res.data),
+    resetPassword: (data) => apiClient.post('/auth/reset', data).then(res => res.data),
+    getMe: () => apiClient.get('/auth/me').then(res => res.data),
+    register: (data) => apiClient.post('/auth/register', data).then(res => res.data),
 
     getProducts: (params) => {
         const queryString = new URLSearchParams(params).toString();
-        return fetchWithAuth(`/products?${queryString}`);
+        return apiClient.get(`/products?${queryString}`).then(res => res.data);
     },
-    getProduct: (id) => fetchWithAuth(`/products/${id}`),
-    getProductStock: (id) => fetchWithAuth(`/products/${id}/stock`),
-    createProduct: (data) => fetchWithAuth('/products', { method: 'POST', body: JSON.stringify(data) }),
-    updateProduct: (id, data) => fetchWithAuth(`/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    deleteProduct: (id) => fetchWithAuth(`/products/${id}`, { method: 'DELETE' }),
+    getProduct: (id) => apiClient.get(`/products/${id}`).then(res => res.data),
+    getProductStock: (id) => apiClient.get(`/products/${id}/stock`).then(res => res.data),
+    createProduct: (data) => apiClient.post('/products', data).then(res => res.data),
+    updateProduct: (id, data) => apiClient.put(`/products/${id}`, data).then(res => res.data),
+    deleteProduct: (id) => apiClient.delete(`/products/${id}`).then(res => res.data),
 
-    getWarehouses: () => fetchWithAuth('/warehouses'),
-    createWarehouse: (data) => fetchWithAuth('/warehouses', { method: 'POST', body: JSON.stringify(data) }),
+    getWarehouses: () => apiClient.get('/warehouses').then(res => res.data),
+    createWarehouse: (data) => apiClient.post('/warehouses', data).then(res => res.data),
 
-    getLocations: () => fetchWithAuth('/locations'),
-    createLocation: (data) => fetchWithAuth('/locations', { method: 'POST', body: JSON.stringify(data) }),
-    deleteLocation: (id) => fetchWithAuth(`/locations/${id}`, { method: 'DELETE' }),
+    getLocations: () => apiClient.get('/locations').then(res => res.data),
+    createLocation: (data) => apiClient.post('/locations', data).then(res => res.data),
+    deleteLocation: (id) => apiClient.delete(`/locations/${id}`).then(res => res.data),
 
-    getUsers: () => fetchWithAuth('/users'),
-    updateUser: (id, data) => fetchWithAuth(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    getUsers: () => apiClient.get('/users').then(res => res.data),
+    updateUser: (id, data) => apiClient.put(`/users/${id}`, data).then(res => res.data),
 
-    getTransactions: () => fetchWithAuth('/transactions'),
-    createTransaction: (data) => fetchWithAuth('/transactions', { method: 'POST', body: JSON.stringify(data) }),
-    validateTransaction: (id) => fetchWithAuth(`/transactions/${id}/validate`, { method: 'POST' }),
+    getTransactions: () => apiClient.get('/transactions').then(res => res.data),
+    createTransaction: (data) => apiClient.post('/transactions', data).then(res => res.data),
+    validateTransaction: (id) => apiClient.post(`/transactions/${id}/validate`).then(res => res.data),
 
     getDashboardStats: (params) => {
         const queryString = new URLSearchParams(params).toString();
-        return fetchWithAuth(`/dashboard?${queryString}`);
+        return apiClient.get(`/dashboard?${queryString}`).then(res => res.data);
     },
+
+    // Generic methods
+    get: (url, config) => apiClient.get(url, config),
+    post: (url, data, config) => apiClient.post(url, data, config),
+    put: (url, data, config) => apiClient.put(url, data, config),
+    delete: (url, config) => apiClient.delete(url, config),
 };

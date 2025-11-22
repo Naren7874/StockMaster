@@ -22,8 +22,8 @@ const Signup = () => {
                 throw new Error("Passwords do not match");
             }
             const { confirmPassword, ...signupData } = formData;
-            const data = await api.signup(signupData);
-            login(data.user, data.token);
+            const { accessToken, refreshToken, user } = await api.signup(signupData);
+            login(accessToken, refreshToken, user);
             navigate('/');
         } catch (err) {
             setError(err.message || 'Failed to sign up');
